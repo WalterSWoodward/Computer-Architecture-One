@@ -1,4 +1,4 @@
-# Project: The LS-8 Emulator
+Step# Project: The LS-8 Emulator
 
 ## Module 1
 
@@ -102,7 +102,6 @@ automatically once the clock stops.
 > It exits because node only runs as long as you're in a function or you have
 > timers active.
 
-
 ### Step 4: Add the `LDI` instruction
 
 This instruction sets a specified register to a specified value.
@@ -110,14 +109,13 @@ This instruction sets a specified register to a specified value.
 See the LS-8 spec for the details of what this instructions does and its opcode
 value.
 
-
 ### Step 5: Add the `PRN` instruction
 
 This is a very similar process to adding `LDI`, but the handler is simpler. See
 the LS-8 spec.
 
-*At this point, you should be able to run the program and have it print `8` to
-the console!*
+_At this point, you should be able to run the program and have it print `8` to
+the console!_
 
 ### Step 6: Implement a Multiply and Print the Result
 
@@ -232,7 +230,7 @@ handler(); // Call it
 
 ## Module 2
 
-###  Implement System Stack
+### Implement System Stack
 
 All CPUs manage a _stack_ that can be used to store information temporarily.
 This stack resides in main memory and typically starts at the top of memory (at
@@ -263,7 +261,6 @@ specific address.
 In **any** case where the instruction handler sets the `PC` directly, you
 _don't_ want to advance the PC to the next instruction. So you'll have to set up
 a special case for those types of instructions.
-
 
 ## Stretch Goal
 
@@ -332,7 +329,6 @@ that fires once per second.
 00001011 # IRET        Return from interrupt
 ```
 
-
 The assembly program is interested in getting timer interrupts, so it sets the
 IM register to `00000001` with `LDI R5,1`.
 
@@ -363,5 +359,3 @@ for (let i = 0; i < 8; i++) {
 executing the current instruction as per usual.)
 
 If `interruptHappened`, check the LS-8 spec for details on what to do.
-
-
