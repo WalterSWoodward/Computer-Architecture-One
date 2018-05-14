@@ -1,4 +1,4 @@
-Step# Project: The LS-8 Emulator
+# Project: The LS-8 Emulator
 
 ## Module 1
 

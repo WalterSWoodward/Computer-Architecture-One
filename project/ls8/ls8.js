@@ -16,8 +16,12 @@ function loadMemory() {
     '00000000', // R0
     '00001000', // R8
     // Print (PRN) the value in R0
-    '01000011', // PRN R0
+    '01000011', // PRN
     '00000000', // R0
+    // MUL R0, R1
+    '10101010', // MUL
+    '00000000', // R0
+    '00000001', // R1
     // HLT = Halt and quit
     '00000001' // HLT
   ];
