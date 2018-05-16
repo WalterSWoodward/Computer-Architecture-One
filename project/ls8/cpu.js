@@ -61,7 +61,7 @@ class CPU {
     this.reg = new Array(8).fill(0); // General-purpose registers R0-R7
 
     // Special-purpose registers
-    this.reg.PC = 0; // Program Counter
+    this.PC = 0; // Program Counter
     // this.reg.IR = 0;
   }
 
@@ -115,16 +115,16 @@ class CPU {
     // index into memory of the instruction that's about to be executed
     // right now.)
 
-    const IR = this.ram.read(this.reg.PC); // copy of the currently executing instruction -- starts at 0
+    const IR = this.ram.read(this.PC); // copy of the currently executing instruction -- starts at 0
 
     // Debugging output
-    // console.log(`${this.reg.PC}: ${IR.toString(2)}`);
+    // console.log(`${this.PC}: ${IR.toString(2)}`);
 
     // Get the two bytes in memory _after_ the PC in case the instruction
     // needs them. (see lines 82 - 86 in README for more detailed instructions)
 
-    let operandA = this.ram.read(this.reg.PC + 1);
-    let operandB = this.ram.read(this.reg.PC + 2);
+    let operandA = this.ram.read(this.PC + 1);
+    let operandB = this.ram.read(this.PC + 2);
 
     // Execute the instruction. Perform the actions for the instruction as
     // outlined in the LS-8 spec.
@@ -144,48 +144,23 @@ class CPU {
 
     switch (IR) {
       case LDI:
-        // Per LS8-SPEC:
-        // Loads registerA with the value at the address stored in registerB.
-        const prev = this.reg[operandA];
+        // console.log('its doing LDI');
         this.reg[operandA] = operandB;
-        console.log(
-          `operandA value updated with LDI from ${prev} to ${
-            this.reg[operandA]
-          }`
-        );
         break;
       case PRN:
-        // Per LS8-SPEC:
-        // Print numeric value stored in the given register.
-        // Print to the console the decimal integer value that is stored in the
-        // given register.
-        console.log(
-          'operandA loaded and printed inside PRN:',
-          this.reg[operandA]
-        );
+        console.log('PRN: ', this.reg[operandA]);
         break;
-
+      case MUL:
+        const result = operandA * operandB;
+        console.log(result);
+        break;
       case HLT:
-        // Per LS8-SPEC:
-        // Halt the CPU (and exit the emulator).
-        // Per README - emulator should exit auotmatically once clock stops (line 99)
+        // console.log('halting');
         this.stopClock();
         break;
-
-      case MUL:
-        // Per LS8-SPEC:
-        // Multiply two registers together and store the result in registerA.
-        // Here the 'alu' method is used -- see CPU methods above.
-        console.log(
-          `calculating ${this.reg[operandA]} * ${this.reg[operandB]} = ...`
-        );
-        this.alu('MUL', operandA, operandB);
-        console.log('ANSWER is:', this.reg[operandA]);
-        break;
-
       default:
         let defErr = IR.toString(2);
-        console.error(`Default Error at PC ${this.reg.PC} : ${defErr}`);
+        console.error(`Default Error at PC ${this.PC} : ${defErr}`);
         this.stopClock();
         break;
     }
@@ -195,9 +170,15 @@ class CPU {
     // instruction byte tells you how many bytes follow the instruction byte
     // for any particular instruction.
 
-    if (IR !== CALL && IR !== RET) {
-      this.reg.PC += (IR >> 6) + 1;
-    }
+    // console.log(
+    //   `current location is: ${this.PC}.  Add ((IR >> 6) + 1) = ${(IR >> 6) +
+    //     1} to get next Program Counter address`
+    // );
+    // MASKING: If you want to shift numbers off of the left side of the binary number, then
+    // you can use a mask.  Ex. If you want to turn 00010111 into 00000111, then you
+    // can do this --> 00010111 & 00000111.  This is a mask or AND mask. You put 1's
+    // where you want to preserve the bits, and 0's where you want to nuke the bits.
+    this.PC += ((IR & 11000000) >>> 6) + 1;
   }
 }
 

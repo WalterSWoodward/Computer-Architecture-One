@@ -12,4 +12,3 @@
 01000011 # PRN R0    Print value in R0
 00000000
 00000001 # HLT       Halt
-
