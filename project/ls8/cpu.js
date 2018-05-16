@@ -230,7 +230,8 @@ class CPU {
   }
 
   handle_POP(operandA) {
-    this.ram.write(this.reg[operandA], this.reg[SP]);
+    // this.ram.write(this.reg[operandA], this.reg[SP]);
+    this.reg[operandA] = this.ram.read(this.reg[SP]);
     this.alu('INC', SP);
   }
 
