@@ -4,6 +4,15 @@
 
 // ========= opcode variables (for readability) ====== //
 
+// '0b' denotes that this is a binary number
+// '10011001' is the machine code for LDI - found in LS8-SPEC
+// Ex. (MUL) breakdown: 0b-10-1-01-010
+// '0b' -- this is a binary #
+// '10' -- with 2 operands
+// '1' -- it is an ALU operation
+// '01' -- Category 1
+// '010' -- Instruction 2
+
 const ADD = 0b10101000;
 const ADDI = 0b10101111;
 const AND = 0b10110011;
@@ -48,6 +57,12 @@ const SUB = 0b10101001;
 const SUBI = 0b10111001;
 const XOR = 0b10110010;
 
+// reserved numeric registers:
+const FL = 4;
+const IM = 5;
+const IS = 6;
+const SP = 7;
+
 /**
  * Class for simulating a simple Computer (CPU & memory)
  */
@@ -62,6 +77,7 @@ class CPU {
 
     // Special-purpose registers
     this.PC = 0; // Program Counter
+
     // this.reg.IR = 0;
     this.handler = [];
 
@@ -71,6 +87,8 @@ class CPU {
     this.handler[MUL] = this.handle_MUL.bind(this);
     this.handler[PRN] = this.handle_PRN.bind(this);
     this.handler[HLT] = this.handle_HLT.bind(this);
+    this.handler[POP] = this.handle_POP.bind(this);
+    this.handler[PUSH] = this.handle_PUSH.bind(this);
   }
 
   /**
@@ -111,6 +129,14 @@ class CPU {
       case 'MUL':
         this.reg[regA] *= this.reg[regB];
         break;
+
+      case 'DEC':
+        this.reg[regA] -= 1;
+        break;
+
+      case 'INC':
+        this.reg[regA] += 1;
+        break;
     }
   }
 
@@ -136,19 +162,6 @@ class CPU {
 
     // Execute the instruction. Perform the actions for the instruction as
     // outlined in the LS-8 spec.
-
-    // '0b' denotes that this is a binary number
-    // '10011001' is the machine code for LDI - found in LS8-SPEC
-    const LDI = 0b10011001;
-    const HLT = 0b00000001;
-    // MUL breakdown: 0b-10-1-01-010
-    // '0b' -- this is a binary #
-    // '10' -- with 2 operands
-    // '1' -- it is an ALU operation
-    // '01' -- Category 1
-    // '010' -- Instruction 2
-    const MUL = 0b10101010;
-    const PRN = 0b01000011;
 
     const h = this.handler[IR];
     if (h === undefined) {
@@ -214,6 +227,17 @@ class CPU {
   handle_MUL(operandA, operandB) {
     // this.reg[operandA] = operandA * operandB;
     this.alu('MUL', operandA, operandB);
+  }
+
+  handle_POP(operandA) {
+    this.ram.write(this.reg[operandA], this.reg[SP]);
+    this.alu('INC', SP);
+  }
+
+  handle_PUSH(operandA) {
+    // need to reference R7 here and then decrement
+    this.alu('DEC', SP);
+    this.ram.write(this.reg[SP], this.reg[operandA]);
   }
 }
 
