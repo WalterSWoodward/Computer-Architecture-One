@@ -66,7 +66,7 @@ function loadMemory() {
       codes.push(element.slice(0, 8));
     } else return;
   });
-  console.log(`CODES`, codes);
+  // console.log(`CODES`, codes);
   for (let i = 0; i < codes.length; i++) {
     cpu.poke(i, parseInt(codes[i], 2));
   }

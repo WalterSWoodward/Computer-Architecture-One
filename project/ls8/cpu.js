@@ -63,6 +63,14 @@ class CPU {
     // Special-purpose registers
     this.PC = 0; // Program Counter
     // this.reg.IR = 0;
+    this.handler = [];
+
+    // The value of the variable 'handle_LDI' is equal to the function `handler[LDI]`
+    // bind sets the value of 'this' inside the functions themselves to the class CPU
+    this.handler[LDI] = this.handle_LDI.bind(this); // Need this appended to front of handle_MUL otherwise handle_LDI not defined
+    this.handler[MUL] = this.handle_MUL.bind(this);
+    this.handler[PRN] = this.handle_PRN.bind(this);
+    this.handler[HLT] = this.handle_HLT.bind(this);
   }
 
   /**
@@ -133,7 +141,7 @@ class CPU {
     // '10011001' is the machine code for LDI - found in LS8-SPEC
     const LDI = 0b10011001;
     const HLT = 0b00000001;
-    // breakdown: 0b-10-1-01-010
+    // MUL breakdown: 0b-10-1-01-010
     // '0b' -- this is a binary #
     // '10' -- with 2 operands
     // '1' -- it is an ALU operation
@@ -142,28 +150,37 @@ class CPU {
     const MUL = 0b10101010;
     const PRN = 0b01000011;
 
-    switch (IR) {
-      case LDI:
-        // console.log('its doing LDI');
-        this.reg[operandA] = operandB;
-        break;
-      case PRN:
-        console.log('PRN: ', this.reg[operandA]);
-        break;
-      case MUL:
-        const result = operandA * operandB;
-        console.log(result);
-        break;
-      case HLT:
-        // console.log('halting');
-        this.stopClock();
-        break;
-      default:
-        let defErr = IR.toString(2);
-        console.error(`Default Error at PC ${this.PC} : ${defErr}`);
-        this.stopClock();
-        break;
+    const h = this.handler[IR];
+    if (h === undefined) {
+      console.error(`Default Error at PC ${this.PC} : ${defErr}`);
+      this.stopClock();
+      return;
     }
+    h(operandA, operandB);
+    // can also set `this` correctly by explicitly adding this as a parameter --> h.call(this, operandA, operandB)
+
+    // switch (IR) {
+    //   case LDI:
+    //     // console.log('its doing LDI');
+    //     this.reg[operandA] = operandB;
+    //     break;
+    //   case PRN:
+    //     console.log('PRN: ', this.reg[operandA]);
+    //     break;
+    //   case MUL:
+    //     const result = operandA * operandB;
+    //     console.log(result);
+    //     break;
+    //   case HLT:
+    //     // console.log('halting');
+    //     this.stopClock();
+    //     break;
+    //   default:
+    //     let defErr = IR.toString(2);
+    //     console.error(`Default Error at PC ${this.PC} : ${defErr}`);
+    //     this.stopClock();
+    //     break;
+    // }
 
     // Increment the PC register to go to the next instruction. Instructions
     // can be 1, 2, or 3 bytes long. Hint: the high 2 bits of the
@@ -179,6 +196,24 @@ class CPU {
     // can do this --> 00010111 & 00000111.  This is a mask or AND mask. You put 1's
     // where you want to preserve the bits, and 0's where you want to nuke the bits.
     this.PC += ((IR & 11000000) >>> 6) + 1;
+  }
+
+  handle_LDI(operandA, operandB) {
+    // `this` will reference global scope unless you bind OR use arrow function
+    this.reg[operandA] = operandB;
+  }
+
+  handle_PRN(operandA) {
+    console.log('PRN: ', this.reg[operandA]);
+  }
+
+  handle_HLT() {
+    this.stopClock();
+  }
+
+  handle_MUL(operandA, operandB) {
+    // this.reg[operandA] = operandA * operandB;
+    this.alu('MUL', operandA, operandB);
   }
 }
 
