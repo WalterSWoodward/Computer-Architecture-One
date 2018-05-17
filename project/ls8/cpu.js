@@ -78,19 +78,24 @@ class CPU {
     // Special-purpose registers
     this.PC = 0; // Program Counter
 
+    // Set start of stack to empty
+    // Per the LS8-SPECS aka docs, SP value is stored at 0xf4, or index 244
+    this.reg[SP] = 0xf4;
+
     // this.reg.IR = 0;
     this.handler = [];
 
     // The value of the variable 'handle_LDI' is equal to the function `handler[LDI]`
     // bind sets the value of 'this' inside the functions themselves to the class CPU
-    this.handler[LDI] = this.handle_LDI.bind(this); // Need this appended to front of handle_MUL otherwise handle_LDI not defined
+    this.handler[LDI] = this.handle_LDI.bind(this); // Need this appended to front of handle_LDI otherwise handle_LDI not defined
     this.handler[MUL] = this.handle_MUL.bind(this);
     this.handler[PRN] = this.handle_PRN.bind(this);
     this.handler[HLT] = this.handle_HLT.bind(this);
     this.handler[POP] = this.handle_POP.bind(this);
     this.handler[PUSH] = this.handle_PUSH.bind(this);
-    this.handler[RET] = this.handle_PUSH.bind(this);
-    this.handler[CALL] = this.handle_PUSH.bind(this);
+    this.handler[RET] = this.handle_RET.bind(this);
+    this.handler[CALL] = this.handle_CALL.bind(this);
+    this.handler[ADD] = this.handle_ADD.bind(this);
   }
 
   /**
@@ -139,6 +144,9 @@ class CPU {
       case 'INC':
         this.reg[regA] += 1;
         break;
+      case 'ADD':
+        this.reg[regA] += this.reg[regB];
+        break;
     }
   }
 
@@ -168,7 +176,7 @@ class CPU {
     const h = this.handler[IR];
 
     if (h === undefined) {
-      console.error(`Default Error at PC ${this.PC} : ${defErr}`);
+      console.error(`Default Error at PC ${this.PC} : Error`);
       this.stopClock();
       return;
     }
@@ -218,12 +226,16 @@ class CPU {
   }
 
   handle_LDI(operandA, operandB) {
-    // `this` will reference global scope unless you bind OR use arrow function
+    console.log('LDI');
+    if (operandA === 1) {
+      console.log(`Load R${operandA} to point to Mult2Print at ${operandB}`);
+    } else console.log(`Load R${operandA} to equal ${operandB}`);
+
     this.reg[operandA] = operandB;
   }
 
-  handle_PRN(operandA) {
-    console.log('PRN: ', this.reg[operandA]);
+  handle_PRN(regIndex) {
+    console.log(`PRN: this.reg[${regIndex}] =`, this.reg[regIndex]);
   }
 
   handle_HLT() {
@@ -246,10 +258,27 @@ class CPU {
   }
 
   handle_CALL(operandA) {
-    this.ram.write(this.reg[SP], this.reg[operandA]);
+    console.log('CALL');
+
+    this.alu('DEC', SP);
+    this.poke(this.reg[SP], this.PC + 2);
+    this.PC = this.reg[operandA];
   }
 
-  handle_RET(operandA) {}
+  handle_RET() {
+    console.log('RET');
+    this.PC = this.ram.read(this.reg[SP]);
+    this.alu('INC', SP);
+  }
+
+  handle_ADD(operandA, operandB) {
+    console.log(
+      `ADD R${[operandA]}(${this.reg[operandA]}) to R${operandB}(${
+        this.reg[operandB]
+      })`
+    );
+    this.alu('ADD', operandA, operandB);
+  }
 }
 
 module.exports = CPU;
