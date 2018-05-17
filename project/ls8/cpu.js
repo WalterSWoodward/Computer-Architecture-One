@@ -63,6 +63,11 @@ const IM = 5;
 const IS = 6;
 const SP = 7;
 
+// Flag input values for CMP:
+const FLAG_EQ = 0; // 0b00000001
+const FLAG_GT = 1; // 0b00000010
+const FLAG_LT = 2; // 0b00000100
+
 /**
  * Class for simulating a simple Computer (CPU & memory)
  */
@@ -77,6 +82,8 @@ class CPU {
 
     // Special-purpose registers
     this.PC = 0; // Program Counter
+
+    this.FL = 0;
 
     // Set start of stack to empty
     // Per the LS8-SPECS aka docs, SP value is stored at 0xf4, or index 244
@@ -96,6 +103,7 @@ class CPU {
     this.handler[RET] = this.handle_RET.bind(this);
     this.handler[CALL] = this.handle_CALL.bind(this);
     this.handler[ADD] = this.handle_ADD.bind(this);
+    this.handler[CMP] = this.handle_CMP.bind(this);
   }
 
   /**
@@ -121,6 +129,10 @@ class CPU {
     clearInterval(this.clock);
   }
 
+  setFlag(flag) {
+    this.FL = 0b1 << flag;
+  }
+
   /**
    * ALU functionality
    *
@@ -132,20 +144,30 @@ class CPU {
    * op can be: ADD SUB MUL DIV INC DEC CMP
    */
   alu(op, regA, regB) {
+    let valA = this.reg[regA];
+    let valB = this.reg[regB];
     switch (op) {
       case 'MUL':
-        this.reg[regA] *= this.reg[regB];
+        valA *= valB;
         break;
 
       case 'DEC':
-        this.reg[regA] -= 1;
+        valA -= 1;
         break;
 
       case 'INC':
-        this.reg[regA] += 1;
+        valA += 1;
         break;
       case 'ADD':
-        this.reg[regA] += this.reg[regB];
+        valA += valB;
+        break;
+      case 'CMP':
+        // console.log(
+        //   `valA: ${valA}, valB: ${valB}, FLAG_EQ: ${FLAG_EQ}, FLAG_GT: ${FLAG_GT}, FLAG_LT: ${FLAG_LT}`
+        // );
+        if (valA > valB) this.setFlag(FLAG_GT);
+        if (valA < valB) this.setFlag(FLAG_LT);
+        if (valA == valB) this.setFlag(FLAG_EQ);
         break;
     }
   }
@@ -259,7 +281,6 @@ class CPU {
 
   handle_CALL(operandA) {
     console.log('CALL');
-
     this.alu('DEC', SP);
     this.poke(this.reg[SP], this.PC + 2);
     this.PC = this.reg[operandA];
@@ -278,6 +299,13 @@ class CPU {
       })`
     );
     this.alu('ADD', operandA, operandB);
+  }
+
+  handle_CMP(operandA, operandB) {
+    // console.log(`Compare the values of R${operandA}, with R${operandB}`);
+    // console.log(`this.FL updated from ${this.FL}`);
+    this.alu('CMP', operandA, operandB);
+    // console.log(`to ${this.FL}`);
   }
 }
 
