@@ -1,0 +1,19 @@
+# jgt.ls8
+
+## Really this is a print10, CMP, JGT, but just called it JGT for short.
+
+10011001 # LDI R0,10  Store 10 into R0
+00000000
+00001010
+01000011 # PRN R0    Print the value in R0
+00000000
+01000011 # PRN R1    Print the value in R1
+00000001
+10100000 # CMP R1,R0 Compare R1 to R0, updates this.FL and prints
+00000000
+00000001
+01010100 # JGT R1    With R0 > R1, and flag set to greater than, this SHOULD update this.PC to
+00000001
+
+
+00000001 # HLT       Halt and quit

@@ -104,6 +104,7 @@ class CPU {
     this.handler[CALL] = this.handle_CALL.bind(this);
     this.handler[ADD] = this.handle_ADD.bind(this);
     this.handler[CMP] = this.handle_CMP.bind(this);
+    this.handler[JGT] = this.handle_JGT.bind(this);
   }
 
   /**
@@ -131,6 +132,10 @@ class CPU {
 
   setFlag(flag) {
     this.FL = 0b1 << flag;
+  }
+
+  checkFlag(flag) {
+    return flag === 1;
   }
 
   /**
@@ -302,10 +307,19 @@ class CPU {
   }
 
   handle_CMP(operandA, operandB) {
-    // console.log(`Compare the values of R${operandA}, with R${operandB}`);
-    // console.log(`this.FL updated from ${this.FL}`);
+    console.log(`Compare the values of R${operandA}, with R${operandB}`);
+    console.log(`this.FL updated from ${this.FL}`);
     this.alu('CMP', operandA, operandB);
-    // console.log(`to ${this.FL}`);
+    console.log(`to ${this.FL}`);
+    console.log(`this.PC at end of CMP: ${this.PC}`);
+  }
+
+  handle_JGT(operandA) {
+    console.log(`this.PC before: ${this.PC}`);
+    if (this.checkFlag(FLAG_GT)) {
+      this.PC = this.reg[operandA];
+    } else return;
+    console.log(`this.PC after: ${this.PC}`);
   }
 }
 
