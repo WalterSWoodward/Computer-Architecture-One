@@ -89,6 +89,8 @@ class CPU {
     this.handler[HLT] = this.handle_HLT.bind(this);
     this.handler[POP] = this.handle_POP.bind(this);
     this.handler[PUSH] = this.handle_PUSH.bind(this);
+    this.handler[RET] = this.handle_PUSH.bind(this);
+    this.handler[CALL] = this.handle_PUSH.bind(this);
   }
 
   /**
@@ -164,11 +166,13 @@ class CPU {
     // outlined in the LS-8 spec.
 
     const h = this.handler[IR];
+
     if (h === undefined) {
       console.error(`Default Error at PC ${this.PC} : ${defErr}`);
       this.stopClock();
       return;
     }
+
     h(operandA, operandB);
     // can also set `this` correctly by explicitly adding this as a parameter --> h.call(this, operandA, operandB)
 
@@ -208,7 +212,9 @@ class CPU {
     // you can use a mask.  Ex. If you want to turn 00010111 into 00000111, then you
     // can do this --> 00010111 & 00000111.  This is a mask or AND mask. You put 1's
     // where you want to preserve the bits, and 0's where you want to nuke the bits.
-    this.PC += ((IR & 11000000) >>> 6) + 1;
+    if (IR !== CALL && IR !== RET && IR !== JMP) {
+      this.PC += ((IR & 11000000) >>> 6) + 1;
+    }
   }
 
   handle_LDI(operandA, operandB) {
@@ -230,16 +236,20 @@ class CPU {
   }
 
   handle_POP(operandA) {
-    // this.ram.write(this.reg[operandA], this.reg[SP]);
     this.reg[operandA] = this.ram.read(this.reg[SP]);
     this.alu('INC', SP);
   }
 
   handle_PUSH(operandA) {
-    // need to reference R7 here and then decrement
     this.alu('DEC', SP);
     this.ram.write(this.reg[SP], this.reg[operandA]);
   }
+
+  handle_CALL(operandA) {
+    this.ram.write(this.reg[SP], this.reg[operandA]);
+  }
+
+  handle_RET(operandA) {}
 }
 
 module.exports = CPU;
