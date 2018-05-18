@@ -360,7 +360,7 @@ register.
 Machine code:
 
 ```
-01010100 00000rrr
+F00000rrr
 ```
 
 ### JLT

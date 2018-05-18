@@ -131,7 +131,7 @@ class CPU {
   }
 
   setFlag(flag) {
-    this.FL = 0b1 << flag;
+    this.FL = flag;
   }
 
   checkFlag(flag) {
@@ -149,24 +149,25 @@ class CPU {
    * op can be: ADD SUB MUL DIV INC DEC CMP
    */
   alu(op, regA, regB) {
-    let valA = this.reg[regA];
-    let valB = this.reg[regB];
+    const valA = this.reg[regA];
+    const valB = this.reg[regB];
     switch (op) {
       case 'MUL':
-        valA *= valB;
+        this.reg[regA] = valA * valB;
         break;
 
       case 'DEC':
-        valA -= 1;
+        this.reg[regA] -= 1;
         break;
 
       case 'INC':
-        valA += 1;
+        this.reg[regA] += 1;
         break;
       case 'ADD':
-        valA += valB;
+        this.reg[regA] = valA + valB;
         break;
       case 'CMP':
+        // console.log(`CMP in ALU`); // UNCOMMENT for jgt.ls8
         // console.log(
         //   `valA: ${valA}, valB: ${valB}, FLAG_EQ: ${FLAG_EQ}, FLAG_GT: ${FLAG_GT}, FLAG_LT: ${FLAG_LT}`
         // );
@@ -202,6 +203,7 @@ class CPU {
 
     const h = this.handler[IR];
 
+    // console.log('new IR =', IR); // UNCOMMENT to see IR values coming in from file
     if (h === undefined) {
       console.error(`Default Error at PC ${this.PC} : Error`);
       this.stopClock();
@@ -247,16 +249,16 @@ class CPU {
     // you can use a mask.  Ex. If you want to turn 00010111 into 00000111, then you
     // can do this --> 00010111 & 00000111.  This is a mask or AND mask. You put 1's
     // where you want to preserve the bits, and 0's where you want to nuke the bits.
-    if (IR !== CALL && IR !== RET && IR !== JMP) {
+    if (IR !== CALL && IR !== RET && IR !== JMP && IR !== JGT) {
       this.PC += ((IR & 11000000) >>> 6) + 1;
     }
   }
 
   handle_LDI(operandA, operandB) {
     console.log('LDI');
-    if (operandA === 1) {
-      console.log(`Load R${operandA} to point to Mult2Print at ${operandB}`);
-    } else console.log(`Load R${operandA} to equal ${operandB}`);
+    // if (operandA === 1) {
+    //   console.log(`Load R${operandA} to point to Mult2Print at ${operandB}`);
+    // } else console.log(`Load R${operandA} to equal ${operandB}`); // UNCOMMENT for call.ls8
 
     this.reg[operandA] = operandB;
   }
@@ -286,8 +288,31 @@ class CPU {
 
   handle_CALL(operandA) {
     console.log('CALL');
+    // console.log('REG', this.reg); // UNCOMMENT for call.ls8
+
+    // console.log(
+    //   `Currently you will find the RAM address ${
+    //     this.reg[SP]
+    //   } stored at the REG index ${SP}.  On RAM, the address/index ${
+    //     this.reg[SP]
+    //   } contains the value ${this.ram.mem[this.reg[SP]]}`
+    // ); // UNCOMMENT for call.ls8
+    // console.log(
+    //   `So we are going to move the stack pointer (SP) from ${this.reg[SP]}`
+    // ); // UNCOMMENT for call.ls8
+    // this.reg[SP] -= 1; // This works too
     this.alu('DEC', SP);
-    this.poke(this.reg[SP], this.PC + 2);
+    // console.log(`to ${this.reg[SP]}`); // UNCOMMENT for call.ls8
+    // this.poke(this.reg[SP], this.PC + 2); // also works
+    // console.log(`Then we are going to store ${this.PC + 2}`); // UNCOMMENT for call.ls8
+    this.ram.write(this.reg[SP], this.PC + 2);
+    // console.log(` at this.ram.mem[${this.reg[SP]}]`); // UNCOMMENT for call.ls8
+    // console.log(
+    //   `Lastly, the currently executing instruction (this.PC) is set to the this.reg[${operandA}] with value ${
+    //     this.reg[operandA]
+    //   } - Mult2Print`
+    // ); // UNCOMMENT for call.ls8
+    // console.log('REG', this.reg); // UNCOMMENT for call.ls8
     this.PC = this.reg[operandA];
   }
 
@@ -298,28 +323,34 @@ class CPU {
   }
 
   handle_ADD(operandA, operandB) {
-    console.log(
-      `ADD R${[operandA]}(${this.reg[operandA]}) to R${operandB}(${
-        this.reg[operandB]
-      })`
-    );
+    // console.log(
+    //   `ADD R${[operandA]}(${this.reg[operandA]}) to R${operandB}(${
+    //     this.reg[operandB]
+    //   })`
+    // ); // UNCOMMENT for call.ls8
     this.alu('ADD', operandA, operandB);
   }
 
   handle_CMP(operandA, operandB) {
-    console.log(`Compare the values of R${operandA}, with R${operandB}`);
-    console.log(`this.FL updated from ${this.FL}`);
+    // console.log(`Compare the values of R${operandA}, with R${operandB}`); // UNCOMMENT for jgt.ls8
+    // console.log(`this.FL updated from ${this.FL}`); // UNCOMMENT for jgt.ls8
     this.alu('CMP', operandA, operandB);
-    console.log(`to ${this.FL}`);
-    console.log(`this.PC at end of CMP: ${this.PC}`);
+    // console.log(`to ${this.FL}`); // UNCOMMENT for jgt.ls8
+    // console.log(`this.PC at end of CMP: ${this.PC}`); // UNCOMMENT for jgt.ls8
   }
 
   handle_JGT(operandA) {
-    console.log(`this.PC before: ${this.PC}`);
+    // console.log('JGT'); // UNCOMMENT for jgt.ls8
+    // console.log(`this.PC before: ${this.PC}`); // UNCOMMENT for jgt.ls8
     if (this.checkFlag(FLAG_GT)) {
       this.PC = this.reg[operandA];
-    } else return;
-    console.log(`this.PC after: ${this.PC}`);
+      // console.log('REG', this.reg); // UNCOMMENT for jgt.ls8
+      // console.log(
+      //   `this.PC set to this.reg[${operandA}] with value of ${
+      //     this.reg[operandA]
+      //   }`
+      // ); // UNCOMMENT for jgt.ls8
+    }
   }
 }
 

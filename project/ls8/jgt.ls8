@@ -2,18 +2,40 @@
 
 ## Really this is a print10, CMP, JGT, but just called it JGT for short.
 
-10011001 # LDI R0,10  Store 10 into R0
+10011001 # LDI R0,10  Store 16 into R0
 00000000
-00001010
+00010000
+10011001 # LDI R1,4  Store 4 into R1
+00000001
+00000100
+10011001 # LDI R3,  Store 1 into R3
+00000011
+00000001
+10011001 # LDI R4,  Store 13 into R4
+00000100
+00001101
 01000011 # PRN R0    Print the value in R0
 00000000
 01000011 # PRN R1    Print the value in R1
 00000001
-10100000 # CMP R1,R0 Compare R1 to R0, updates this.FL and prints
+01000011 # PRN R2    Print the value in R1
+00000010
+01000011 # PRN R3    Print the value in R1
+00000011
+01000011 # PRN R4    Print the value in R1
+00000100
+01000011 # PRN R5    Print the value in R1
+00000101
+10100000 # CMP R2,R5 Compare R2 = 0 with R5 = 0 // expect update of this.FL = FLT_EQ = 0
+00000010
+00000101
+10100000 # CMP R0,R1 Compare R0 = 16 with R1 = 4 // expect update of this.FL = FLT_GT = 1
 00000000
 00000001
-01010100 # JGT R1    With R0 > R1, and flag set to greater than, this SHOULD update this.PC to
-00000001
-
-
-00000001 # HLT       Halt and quit
+10100000 # CMP R4,R0 Compare R4 = 13 with R0 = 16 // expect update of this.FL = FLT_LT = 2
+00000100
+00000000
+01010100 # JGT R4    With R0 > R4, and flag set to greater than, this SHOULD update this.PC to this.reg[1]
+00000001 # HLT      Halt and quit
+10011001 # LDI R4,  Store 13 into R4
+00000100
