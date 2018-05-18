@@ -105,6 +105,9 @@ class CPU {
     this.handler[ADD] = this.handle_ADD.bind(this);
     this.handler[CMP] = this.handle_CMP.bind(this);
     this.handler[JGT] = this.handle_JGT.bind(this);
+    this.handler[JEQ] = this.handle_JEQ.bind(this);
+    this.handler[JNE] = this.handle_JNE.bind(this);
+    this.checkFlag = this.checkFlag.bind(this);
   }
 
   /**
@@ -135,7 +138,11 @@ class CPU {
   }
 
   checkFlag(flag) {
-    return flag === 1;
+    console.log(`CHECKFLAG`);
+    if (flag) {
+      console.log(`CHECKFLAG TRUE`);
+      return true;
+    }
   }
 
   /**
@@ -171,9 +178,9 @@ class CPU {
         // console.log(
         //   `valA: ${valA}, valB: ${valB}, FLAG_EQ: ${FLAG_EQ}, FLAG_GT: ${FLAG_GT}, FLAG_LT: ${FLAG_LT}`
         // );
-        if (valA > valB) this.setFlag(FLAG_GT);
-        if (valA < valB) this.setFlag(FLAG_LT);
-        if (valA == valB) this.setFlag(FLAG_EQ);
+        if (valA > valB) this.setFlag(FLAG_GT); // 1
+        if (valA < valB) this.setFlag(FLAG_LT); // 2
+        if (valA == valB) this.setFlag(FLAG_EQ); // 0
         break;
     }
   }
@@ -249,8 +256,17 @@ class CPU {
     // you can use a mask.  Ex. If you want to turn 00010111 into 00000111, then you
     // can do this --> 00010111 & 00000111.  This is a mask or AND mask. You put 1's
     // where you want to preserve the bits, and 0's where you want to nuke the bits.
-    if (IR !== CALL && IR !== RET && IR !== JMP && IR !== JGT) {
+    if (
+      IR !== JEQ &&
+      IR !== CALL &&
+      IR !== RET &&
+      IR !== JMP &&
+      IR !== JGT &&
+      IR !== JNE
+    ) {
+      console.log(`this.PC address changed from ${this.PC}`);
       this.PC += ((IR & 11000000) >>> 6) + 1;
+      console.log(`to ${this.PC}`);
     }
   }
 
@@ -332,7 +348,12 @@ class CPU {
   }
 
   handle_CMP(operandA, operandB) {
-    // console.log(`Compare the values of R${operandA}, with R${operandB}`); // UNCOMMENT for jgt.ls8
+    console.log('CMP');
+    // console.log(
+    //   `Compare the values of R${operandA}(${
+    //     this.reg[operandA]
+    //   }), with R${operandB}(${this.reg[operandB]})`
+    // ); // UNCOMMENT for jgt.ls8
     // console.log(`this.FL updated from ${this.FL}`); // UNCOMMENT for jgt.ls8
     this.alu('CMP', operandA, operandB);
     // console.log(`to ${this.FL}`); // UNCOMMENT for jgt.ls8
@@ -342,7 +363,7 @@ class CPU {
   handle_JGT(operandA) {
     // console.log('JGT'); // UNCOMMENT for jgt.ls8
     // console.log(`this.PC before: ${this.PC}`); // UNCOMMENT for jgt.ls8
-    if (this.checkFlag(FLAG_GT)) {
+    if (checkFlag(FLAG_GT)) {
       this.PC = this.reg[operandA];
       // console.log('REG', this.reg); // UNCOMMENT for jgt.ls8
       // console.log(
@@ -350,6 +371,26 @@ class CPU {
       //     this.reg[operandA]
       //   }`
       // ); // UNCOMMENT for jgt.ls8
+    }
+  }
+  handle_JEQ(operandA) {
+    console.log('JEQ');
+    // console.log(
+    //   `wants to change this.PC from ${this.PC} to ${this.reg[operandA]}`
+    // );
+    // console.log(`Will jump if this.FL(${this.FL}) = FLAG_EQ(${FLAG_EQ})`);
+    // console.log('this.FL', this.FL);
+    // console.log(typeof this.FL, typeof FLAG_EQ);
+    if (this.FL == FLAG_EQ) {
+      console.log(`SUCCESS: ${this.FL} = ${FLAG_EQ}`);
+      this.PC = this.reg[operandA];
+    }
+  }
+  handle_JNE(operandA) {
+    console.log('JNE');
+    // console.log(`this.IR: ${this.IR}`); // undefined
+    if (this.FL !== FLAG_EQ) {
+      this.PC = this.reg[operandA];
     }
   }
 }
